@@ -1,12 +1,14 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.18;
 
 import "./CrowdFund.sol";
 
 contract CreateCrowdFund {
-    CrowdFund[] public campaigns; // array of deployed campaigns
+    CrowdFund[] public campaigns; // Array of all created campaigns
 
     function createCampaign(
+        address _owner,
         uint256 _duration,
         uint256 _target,
         string memory _name,
@@ -14,7 +16,7 @@ contract CreateCrowdFund {
         string memory _description
     ) external {
         CrowdFund campaign = new CrowdFund(
-            msg.sender,
+            _owner,
             _duration,
             _target,
             _name,
@@ -25,7 +27,7 @@ contract CreateCrowdFund {
         campaigns.push(campaign);
     }
 
-    function getCampaigns() public view returns (CrowdFund[] memory) {
+    function getCampaigns() external view returns (CrowdFund[] memory) {
         return campaigns;
     }
 }
