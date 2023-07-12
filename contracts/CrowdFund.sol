@@ -19,6 +19,7 @@ contract CrowdFund {
 
     // EVENTS //
     event Contribution(address contributor, uint256 amount);
+    event CampaignEnded(address owner, uint256 total); // Fix this in the videos
 
     constructor(
         address _owner,
@@ -28,9 +29,13 @@ contract CrowdFund {
         string memory _imageUrl,
         string memory _description
     ) {
+        require(_owner != address(0), "Owner address cannot be a zero address"); // Fix this in the videos
+        require(_duration >= 1, "Campaign duration must be at least 1 day"); // Fix this in the videos, durations input is in days
+        require(_target > 0, "Campaign goal must be greater than 0");
+
         owner = _owner;
         campaignStart = block.timestamp;
-        duration = _duration;
+        duration = _duration * 1 days; // fix this in the videos, durations input is in days
         target = _target;
         name = _name;
         imageUrl = _imageUrl;
@@ -44,7 +49,7 @@ contract CrowdFund {
     function contribute() public payable {
         address payable sender = payable(msg.sender);
         uint256 amount = msg.value;
-
+        require(total < target, "Campaign target has been reached"); // Fix this in the videos
         require(amount > 0, "Contribution must be greater than 0 wei");
         require(
             block.timestamp < campaignStart + duration,
@@ -84,6 +89,8 @@ contract CrowdFund {
         // );
 
         (bool sent, bytes memory data) = owner.call{value: total}("");
+
+        emit CampaignEnded(owner, total); // Fix this in the videos
     }
 
     function getTimeLeft() external view returns (uint256) {

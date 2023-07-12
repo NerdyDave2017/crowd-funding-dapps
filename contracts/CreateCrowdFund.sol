@@ -7,6 +7,9 @@ import "./CrowdFund.sol";
 contract CreateCrowdFund {
     CrowdFund[] public campaigns; // Array of all created campaigns
 
+    // EVENTS //
+    event CampaignCreated(address owner, CrowdFund campaign); // Fix this in the videos
+
     function createCampaign(
         address _owner,
         uint256 _duration,
@@ -25,6 +28,8 @@ contract CreateCrowdFund {
         );
 
         campaigns.push(campaign);
+
+        emit CampaignCreated(_owner, campaign);
     }
 
     function getCampaigns() external view returns (CrowdFund[] memory) {
