@@ -157,8 +157,6 @@ describe("CrowdFundTest", function () {
       await crowdFund.connect(account2).contribute({ value: 50 });
       await crowdFund.connect(account3).contribute({ value: 50 });
 
-      console.log(await crowdFund.getTotalContributors());
-
       expect(await crowdFund.getTotalContributors()).to.eql(
         ethers.BigNumber.from(2)
       );
