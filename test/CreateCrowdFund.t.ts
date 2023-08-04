@@ -2,8 +2,9 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { CreateCrowdFund } from "../typechain-types/CreateCrowdFund";
 
-// Test cases
+//Test cases
 /**
  * Create Campaign
  * 1. Should fail if the campaign duration is less than 1 day
@@ -13,12 +14,11 @@ import { ethers } from "hardhat";
  */
 
 /**
- * Get all Campaigns
  * 1. Should return an array of campaign addresses
  */
 
 describe("CreateCrowdFundTest", function () {
-  async function deployCreateCrowdFundFixture() {
+  async function deployCreateCrowdFund() {
     const [owner, account2, account3, account4] = await ethers.getSigners();
 
     const CreateCrowdFund = await ethers.getContractFactory("CreateCrowdFund");
@@ -30,15 +30,16 @@ describe("CreateCrowdFundTest", function () {
   describe("Create Campaign", function () {
     it("Should fail if the campaign duration is less than 1 day", async function () {
       const { createCrowdFund, owner } = await loadFixture(
-        deployCreateCrowdFundFixture
+        deployCreateCrowdFund
       );
+
       await expect(
         createCrowdFund.createCampaign(
           owner.address,
           0,
           100,
           "Orphanage",
-          "https://orphanage.com",
+          "https://orphanage.com/",
           "to the orphanage"
         )
       ).to.be.revertedWith("Campaign duration must be at least 1 day");
@@ -46,15 +47,16 @@ describe("CreateCrowdFundTest", function () {
 
     it("Should fail if owner address is a zero address", async function () {
       const { createCrowdFund, owner } = await loadFixture(
-        deployCreateCrowdFundFixture
+        deployCreateCrowdFund
       );
+
       await expect(
         createCrowdFund.createCampaign(
           ethers.constants.AddressZero,
           10,
           100,
           "Orphanage",
-          "https://orphanage.com",
+          "https://orphanage.com/",
           "to the orphanage"
         )
       ).to.be.revertedWith("Owner address cannot be a zero address");
@@ -62,15 +64,16 @@ describe("CreateCrowdFundTest", function () {
 
     it("Should fail if campaign goal is 0", async function () {
       const { createCrowdFund, owner } = await loadFixture(
-        deployCreateCrowdFundFixture
+        deployCreateCrowdFund
       );
+
       await expect(
         createCrowdFund.createCampaign(
           owner.address,
           10,
           0,
           "Orphanage",
-          "https://orphanage.com",
+          "https://orphanage.com/",
           "to the orphanage"
         )
       ).to.be.revertedWith("Campaign goal must be greater than 0");
@@ -78,35 +81,39 @@ describe("CreateCrowdFundTest", function () {
 
     it("Should Create a campaign if all parameters are valid", async function () {
       const { createCrowdFund, owner } = await loadFixture(
-        deployCreateCrowdFundFixture
+        deployCreateCrowdFund
       );
+
       await expect(
         createCrowdFund.createCampaign(
           owner.address,
           10,
-          100,
+          1000,
           "Orphanage",
-          "https://orphanage.com",
+          "https://orphanage.com/",
           "to the orphanage"
         )
       ).to.emit(createCrowdFund, "CampaignCreated");
     });
   });
 
-  describe("Get all Campaigns", function () {
+  describe("Get all campaigns", function () {
     it("Should return an array of campaign addresses", async function () {
       const { createCrowdFund, owner } = await loadFixture(
-        deployCreateCrowdFundFixture
+        deployCreateCrowdFund
       );
-      await createCrowdFund.createCampaign(
+      // Create a campaign
+      createCrowdFund.createCampaign(
         owner.address,
         10,
         100,
         "Orphanage",
-        "https://orphanage.com",
+        "https://orphanage.com/",
         "to the orphanage"
       );
+
       const campaignAddresses = await createCrowdFund.getCampaigns();
+
       expect(campaignAddresses.length).to.equal(1);
     });
   });

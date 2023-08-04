@@ -2,6 +2,8 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { CreateCrowdFund } from "../typechain-types/CreateCrowdFund";
+import { CrowdFund } from "../typechain-types/CrowdFund";
 
 // Test cases
 /**
@@ -28,15 +30,16 @@ import { ethers } from "hardhat";
  * Get all contributors
  * 1. Should the number of contributors
  */
+
 describe("CrowdFundTest", function () {
-  async function deployCrowdFundFixture() {
+  async function deployCrowdFund() {
     const [owner, account2, account3, account4] = await ethers.getSigners();
 
     const CrowdFund = await ethers.getContractFactory("CrowdFund");
     const crowdFund = await CrowdFund.deploy(
       owner.address, // owner / creator / beneficiary
       10, // campaign duration in days
-      100, // campaign goal in WEI, 1 ETH = 10^18 WEI
+      100, // campaign goal in WEI, 1 Ether = 10^18 WEI
       "Orphanage", // campaign name
       "https://orphanage.com", // campaign image url
       "to the orphanage" // campaign description
@@ -45,12 +48,14 @@ describe("CrowdFundTest", function () {
     return { crowdFund, owner, account2, account3, account4 };
   }
 
-  describe("Contribute", function () {
+  describe("contribute", function () {
     it("Should fail if the campaign duration has ended", async function () {
-      const { crowdFund, account2 } = await loadFixture(deployCrowdFundFixture);
+      const { crowdFund, account2 } = await loadFixture(deployCrowdFund);
+
       const currentTime = await time.latest();
       const campaignDuration = 10 * 24 * 60 * 60; // 10 days in seconds
       const campaignEndTime = currentTime + campaignDuration;
+
       await time.increaseTo(campaignEndTime);
 
       await expect(
@@ -60,24 +65,32 @@ describe("CrowdFundTest", function () {
 
     it("Should fail if the campaign goal has been reached", async function () {
       const { crowdFund, owner, account2, account3, account4 } =
-        await loadFixture(deployCrowdFundFixture);
-      await crowdFund.connect(account2).contribute({ value: 50 });
-      await crowdFund.connect(account3).contribute({ value: 50 });
+        await loadFixture(deployCrowdFund);
+
+      await crowdFund
+        .connect(account2)
+        .contribute({ value: ethers.utils.parseEther(String(50)) });
+      await crowdFund
+        .connect(account3)
+        .contribute({ value: ethers.utils.parseEther(String(50)) });
 
       await expect(
-        crowdFund.connect(account4).contribute({ value: 100 })
+        crowdFund
+          .connect(account4)
+          .contribute({ value: ethers.utils.parseEther(String(100)) })
       ).to.be.revertedWith("Campaign target has been reached");
     });
 
     it("Should fail if amount sent is 0", async function () {
-      const { crowdFund, account2 } = await loadFixture(deployCrowdFundFixture);
+      const { crowdFund, account2 } = await loadFixture(deployCrowdFund);
+
       await expect(
         crowdFund.connect(account2).contribute({ value: 0 })
       ).to.be.revertedWith("Contribution must be greater than 0 wei");
     });
 
     it("Should pass if the campaign is still active and the goal has not been reached", async function () {
-      const { crowdFund, account2 } = await loadFixture(deployCrowdFundFixture);
+      const { crowdFund, account2 } = await loadFixture(deployCrowdFund);
 
       await expect(
         crowdFund.connect(account2).contribute({ value: 100 })
@@ -90,7 +103,7 @@ describe("CrowdFundTest", function () {
   describe("Withdraw", function () {
     it("Should fail if the campaign duration has not ended", async function () {
       const { crowdFund, owner, account2, account3, account4 } =
-        await loadFixture(deployCrowdFundFixture);
+        await loadFixture(deployCrowdFund);
       await crowdFund.connect(account2).contribute({ value: 50 });
       await crowdFund.connect(account3).contribute({ value: 50 });
 
@@ -101,7 +114,7 @@ describe("CrowdFundTest", function () {
 
     it("Should fail if the caller is not the beneficiary", async function () {
       const { crowdFund, owner, account2, account3, account4 } =
-        await loadFixture(deployCrowdFundFixture);
+        await loadFixture(deployCrowdFund);
 
       await crowdFund.connect(account2).contribute({ value: 50 });
       await crowdFund.connect(account3).contribute({ value: 50 });
@@ -118,7 +131,7 @@ describe("CrowdFundTest", function () {
 
     it("Should pass if the campaign duration has ended", async function () {
       const { crowdFund, owner, account2, account3, account4 } =
-        await loadFixture(deployCrowdFundFixture);
+        await loadFixture(deployCrowdFund);
 
       await crowdFund.connect(account2).contribute({ value: 50 });
       await crowdFund.connect(account3).contribute({ value: 50 });
@@ -138,7 +151,7 @@ describe("CrowdFundTest", function () {
   describe("Get time left", function () {
     it("Should return the time left in seconds", async function () {
       const { crowdFund, owner, account2, account3, account4 } =
-        await loadFixture(deployCrowdFundFixture);
+        await loadFixture(deployCrowdFund);
 
       const currentTime = await time.latest();
       const campaignDuration = 10 * 24 * 60 * 60; // 10 days in seconds
@@ -152,7 +165,7 @@ describe("CrowdFundTest", function () {
   describe("Get total number of contributors", function () {
     it("Should return total number of contributors", async function () {
       const { crowdFund, owner, account2, account3, account4 } =
-        await loadFixture(deployCrowdFundFixture);
+        await loadFixture(deployCrowdFund);
 
       await crowdFund.connect(account2).contribute({ value: 50 });
       await crowdFund.connect(account3).contribute({ value: 50 });

@@ -36,7 +36,7 @@ contract CrowdFund {
         owner = _owner;
         campaignStart = block.timestamp;
         duration = _duration * 1 days; // fix this in the videos, durations input is in days
-        target = _target;
+        target = _target * 1 ether; // fix this in the videos, target input is in ether
         name = _name;
         imageUrl = _imageUrl;
         description = _description;
